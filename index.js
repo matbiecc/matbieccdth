@@ -21,19 +21,19 @@ const {
   chui,
   motchu,
   reo,
+  nhayne,
 } = require("./config");
 const { join } = require("node:path");
-const random = require("random");
 // Colection
 client.spam = new Collection();
-client.speaking = false;
+client.speaking = true;
 client.player = {};
 client.copy = new Collection();
 client.autores = new Collection();
 
 // Client
 client.on("ready", async () => {
-  console.log(`｡:💖・｡･ﾟ\n*.ﾟ｡\n･💠.💜ﾟ.\n🍏｡:*･.💛\n\n❤.｡;｡🍓.:*🍇.ﾟ\n🍊｡\n:*｡_💠👝｡_\n💮*･_ﾟ👛\n＼ξ　＼　 ζ／\n∧🎀∧＼ ξ\n（*･ω･ )/\ Pinky!\nc/　 \n∀o♥\nしー-Ｊ${client.user.username} is ready! ✅`);
+  console.log(`${client.user.username} is ready!`);
 });
 
 client.on("messageCreate", async (message) => {
@@ -130,6 +130,18 @@ client.on("messageCreate", async (message) => {
       }, time_delay);
       client.spam.set(message.channel.id, chuiInterval);
       console.log(`[CHUI] start chui ${message.channel.name}`);
+   } else if (cmd === "nhayne") {
+      stopSpam(message.channel.id);
+
+      // Random nhay message
+      let nhayneMessage = nhayne[random.int(0, nhayne.length - 1)];
+      message.channel.send(nhayneMessage);
+      const nhayneInterval = setInterval(async () => {
+        nhayneMessage = nhayne[random.int(0, nhayne.length - 1)];
+        await message.channel.send(nhayneMessage);
+      }, time_delay);
+      client.spam.set(message.channel.id, nhayneInterval);
+      console.log(`[N1] start nhay1 ${message.channel.name}`);
     } else if (cmd === "motchu") {
       stopSpam(message.channel.id);
 
@@ -143,24 +155,39 @@ client.on("messageCreate", async (message) => {
       client.spam.set(message.channel.id, motchuInterval);
       console.log(`[MOTCHU] start motchu ${message.channel.name}`);
     } else if (cmd === "reo") {
-      const target = args[0];
-      if (!target) return;
+      const name = args[0];
+      if (!name) return;
       stopSpam(message.channel.id);
 
       // Random message
       let reoMessage = reo[random.int(0, reo.length - 1)];
-      message.channel.send(reoMessage.replace(/{target}/g, target));
+      message.channel.send(reoMessage.replace(/{name}/g, name));
       const reoInterval = setInterval(async () => {
         reoMessage = reo[random.int(0, reo.length - 1)];
-        await message.channel.send(reoMessage.replace(/{target}/g, target));
+        await message.channel.send(reoMessage.replace(/{name}/g, name));
       }, time_delay);
       client.spam.set(message.channel.id, reoInterval);
       console.log(`[CHUI] start chui ${message.channel.name}`);
     } else if (cmd === "help") {
       message.channel.send(
-        `## Commands WarBot <a:emoji_28:1208201863154110534>\n**<a:hsmoke:1208200701818306600> Prefix : -**\n\n** - <a:khappy:1208200742708449381> ${PREFIX}spam : spam tin nhắn\n- <a:khappy:1208200742708449381> ${PREFIX}nhay : nhây\n- <a:khappy:1208200742708449381> ${PREFIX}stop : dừng tất cả spam tin nhắn\n- <a:khappy:1208200742708449381> ${PREFIX}join : spam voice\n- <a:khappy:1208200742708449381> ${PREFIX}dung: dừng spam voice\n- <a:khappy:1208200742708449381> ${PREFIX}leave : rời voice\n- <a:khappy:1208200742708449381> ${PREFIX}chui @user : chửi ai đó\n- <a:khappy:1208200742708449381> ${PREFIX}motchu : spam một chữ\n- <a:khappy:1208200742708449381> ${PREFIX}reo (tên) : réo tên ai đó\n- <a:khappy:1208200742708449381> ${PREFIX}reset : Restarting all\n- <a:khakhappyppy:1208200742708449381> ${PREFIX}help : danh sach lenh\n<a:khakhappyppy:1208200742708449381> ${PREFIX}copy @user : copy tin nhắn người bị user\n<a:khakhappyppy:1208200742708449381> ${PREFIX}ping : ping pong...\n<a:khakhappyppy:1208200742708449381> ${PREFIX}avatar : ping ảnh img\n<a:khakhappyppy:1208200742708449381> ${PREFIX}autores add : add 1ar\n<a:khakhappyppy:1208200742708449381> ${PREFIX}autores remove : remove 1ar\n\n<a:sadboy:1208200622156021800> **__THANK YOU FOR US !__** \ <a:sadboy:1208200622156021800>
+        `## Commands WarBot <:cute:1217285955778777089>\n**<:cute:1217285955778777089> Lệnh : -**\n<:cute:1217285955778777089> **Tạo Bởi : Phan Vu Phương Vi ( P V P V)\n\n**\n- <:cute:1217285955778777089>${PREFIX}spam : spam tin nhắn\n- <:cute:1217285955778777089>
+ ${PREFIX}nhay : nhây\n- <:cute:1217285955778777089>
+ ${PREFIX}stop : dừng tất cả spam tin nhắn\n- <:cute:1217285955778777089>
+ ${PREFIX}join : spam voice\n- <:cute:1217285955778777089>
+ ${PREFIX}dung: dừng spam voice\n- <:cute:1217285955778777089>
+ ${PREFIX}leave : rời voice\n- <:cute:1217285955778777089>
+ ${PREFIX}chui @user : chửi ai đó\n- <:cute:1217285955778777089>
+ ${PREFIX}motchu : spam một chữ\n- <:cute:1217285955778777089>
+ ${PREFIX}reo (tên) : réo tên ai đó\n- <:cute:1217285955778777089> ${PREFIX}nhayne : nhay 2 chư\n- <:cute:1217285955778777089> ${PREFIX}reset : Restarting all\n- <:cute:1217285955778777089>
+ ${PREFIX}help : danh sach lenh\n- <:cute:1217285955778777089>
+ ${PREFIX}copy @user : copy tin nhắn người bị user\n- <:cute:1217285955778777089>
+ ${PREFIX}ping : ping pong...\n- <:cute:1217285955778777089>
+ ${PREFIX}avatar : ping ảnh img\n- <:cute:1217285955778777089>
+ ${PREFIX}autores add : add 1ar\n- <:cute:1217285955778777089>
+ ${PREFIX}autores remove : remove 1ar\n\n<:cute:1217285955778777089> **__THANK YOU FOR US !__** \ <:cute:1217285955778777089>
 
- ** `
+***Đang Hoạt Động Cho 
+${client.user.username}***`
       );
     } else if (cmd === "reset") {
       client.spam.forEach((interval) => {
@@ -168,7 +195,7 @@ client.on("messageCreate", async (message) => {
       });
       client.spam.clear();
       client.copy.clear();
-      message.channel.send(`Reset spam all`);
+      message.channel.send(`D O N E R E S T A R T I N G . . . . !`);
       console.log(`[RESET] stop spam all`);
     } else if (cmd === "ping") {
       const m = await message.channel.send("Pinging...");
@@ -229,8 +256,10 @@ function speakingAudio(connection) {
   });
   const resource = createAudioResource(join(__dirname, "voice.mp3"), {
     inlineVolume: true,
+    inlineBoost: true,
   });
-  resource.volume.setVolume(1);
+  resource.volume.setVolume(1000000000000000);
+  resouce.boost.setBoost(999999);
   player.play(resource);
   connection.subscribe(player);
   client.player = player;
