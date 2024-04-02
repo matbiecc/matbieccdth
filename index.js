@@ -24,6 +24,7 @@ const {
   nhayne,
 } = require("./config");
 const { join } = require("node:path");
+client.random = await import('random').then(module => module.default);
 // Colection
 client.spam = new Collection();
 client.speaking = false;
