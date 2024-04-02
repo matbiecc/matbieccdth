@@ -1,5 +1,5 @@
 const Config = {
-  PREFIX: "-",
+  PREFIX: "f",
   nhay: [
     "Sua di ma",
     "Sao za",
