@@ -26,7 +26,7 @@ const {
 const { join } = require("node:path");
 // Colection
 client.spam = new Collection();
-client.speaking = true;
+client.speaking = false;
 client.player = {};
 client.copy = new Collection();
 client.autores = new Collection();
