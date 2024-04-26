@@ -1,6 +1,16 @@
 {
+  "main": "index.js",
   "dependencies": {
-    "discord.py": "^1.0.0",
-    "websocket": "^1.0.34"
+     "chalk": "^4.1.2",
+    "discord-webhook-node": "^1.1.8",
+      "discord.js-selfbot-v13": "^2.15.0",
+    "express": "^4.17.1",
+    "node-fetch": "^2.6.1",
+     "@discordjs/voice": "^0.16.1",
+      "@discordjs/opus": "^0.9.0",
+      "libsodium-wrappers": "^0.7.13",
+       "fluent-ffmpeg": "^2.1.2",
+       "colors": "^1.4.0"
+
   }
 }

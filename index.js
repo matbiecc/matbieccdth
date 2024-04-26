@@ -1,276 +1,132 @@
-require("dotenv").config();
-const {
-  Client,
-  Collection,
-  MessageAttachment,
-} = require("discord.js-selfbot-v13");
-const {
-  joinVoiceChannel,
-  createAudioPlayer,
-  NoSubscriberBehavior,
-  createAudioResource,
-  AudioPlayerStatus,
-  getVoiceConnection,
-} = require("@discordjs/voice");
-const client = new Client();
-const {
-  PREFIX,
-  nhay,
-  spam,
-  time_delay,
-  chui,
-  motchu,
-  reo,
-  nhayne,
-} = require("./config");
-const { join } = require("node:path");
-client.random = await import('random').then(module => module.default);
-// Colection
-client.spam = new Collection();
-client.speaking = false;
-client.player = {};
-client.copy = new Collection();
-client.autores = new Collection();
+﻿const { Client } = require("discord.js-selfbot-v13");
+const config = require("./config.json");
+const client = new Client({ checkUpdate: false });
+const { joinVoiceChannel, createAudioPlayer, createAudioResource, getVoiceConnection, NoSubscriberBehavior, AudioPlayerStatus } = require("@discordjs/voice");
+const ffmpeg = require("fluent-ffmpeg");
+require('colors');
 
-// Client
-client.on("ready", async () => {
-  console.log(`${client.user.username} is ready!`);
+//SETTING 
+const PREFIX = "t"
+let thoigianguitinnhan = 5000
+
+// ngôn
+const nhay = [
+    `mẹ m thằng ngu ` ,
+    `cặc ba m cay lắm rồi con chó`,
+    `tức ỉa ra cụt cứt đen xì như mặt mẹ m v đó`,  
+    `sao dạ cắn tao hả thằng ngu` ,
+    `sút m cay té con cặc mà`,
+    `té lửa đi em`, 
+    `phát khóc r à` ,
+    `cay phát khóc như mẹ m đang bị chửi`,
+    `hăng lên con`,   
+    `úi chậm r kìa m tốc độ lên đi` ,
+    `mấy thằng như m là 1 nhát thôi`,
+    `m bị thất sủng bị tụi nó đá mà`,
+    `cay phải gọi là ói dòi ôi` ,
+    `tức rồi kìa ảnh tức r`,
+    `nổi máu dân phèn hả thằng ngu`,  
+    `bày đặt thể hiện đẳng cấp xạo lồn kìa` ,
+    `tía lia như con mẹ m v`,
+    `câm chưa thằng ngu`, 
+    `ẳng nhiều m có mài ra ăn được k` ,
+    `mà xạo lồn ngồi bóc phét v ta`,
+    `ê ê m sủa tốc độ à con chó ngâu`, 
+    `m cay lắm r hả` ,
+    `tức người kia`,
+    `ẹc ẹc sủa nhanh`, ]
+//
+const spam = [
+    `NHa Phuang Hin ` ,
+    `www`,
+    `wwwwwww`,  ] 
+///
+const ownerID = "id" 
+
+/// các lệnh
+const a = "spam" ///spam 
+const b = "stop" ////dừng spam và  nhây 
+const c = "nhay"  //nhây
+const d = "xa" ///join voice và xã
+const e = "out" // out voice dừng xã
+
+client.on('ready', () => {
+    // Thiết lập activity cho bot thành null để tắt hoặc không hiển thị activity
+    client.user.setActivity(null);
+    console.log('Bot đã sẵn sàng và hoạt động.');
 });
 
-client.on("messageCreate", async (message) => {
-  try {
-    if (
-      client.copy.get(message.channel.id) &&
-      client.copy.get(message.channel.id) === message.author.id &&
-      message.content
-    ) {
-      message.channel.send(`${message.content}`);
-    }
-    if (client.autores.get(message.content)) {
-      message.channel.send(client.autores.get(message.content));
-    }
+// Khởi tạo client.intervals
+client.intervals = new Map();
 
-    if (message.author.id !== client.user.id) return;
+// Xử lý sự kiện "message"
+client.on('messageCreate', async (message) => {
+    // Kiểm tra xem tin nhắn có phải từ chính bot hoặc từ owner không
+    if (message.author.id !== client.user.id && message.author.id !== ownerID) return;
+
+    // Kiểm tra xem tin nhắn có bắt đầu bằng prefix không
     if (!message.content.startsWith(PREFIX)) return;
-    const [...args] = message.content.slice(PREFIX.length).trim().split(" ");
-    const cmd = args.shift().toLowerCase();
-    await message.delete();
 
-    if (cmd === "spam") {
-      stopSpam(message.channel.id);
-      // Random spam message
-      let spamMessage = spam[random.int(0, spam.length - 1)];
-      message.channel.send(spamMessage);
-      const spamInterval = setInterval(async () => {
-        spamMessage = spam[random.int(0, spam.length - 1)];
-        await message.channel.send(spamMessage);
-      }, time_delay);
-      client.spam.set(message.channel.id, spamInterval);
-      console.log(`[SPAM] start spam ${message.channel.name}`);
-    } else if (cmd === "stop") {
-      stopSpam(message.channel.id);
-      console.log(`[SPAM] stop spam ${message.channel.name}`);
-    } else if (cmd === "nhay") {
-      stopSpam(message.channel.id);
+    // Tách lệnh và tham số từ tin nhắn
+    const args = message.content.slice(PREFIX.length).trim().split(/ +/);
+    const command = args.shift().toLowerCase();
 
-      // Random nhay message
-      let nhayMessage = nhay[random.int(0, nhay.length - 1)];
-      message.channel.send(nhayMessage);
-      const nhayInterval = setInterval(async () => {
-        nhayMessage = nhay[random.int(0, nhay.length - 1)];
-        await message.channel.send(nhayMessage);
-      }, time_delay);
-      client.spam.set(message.channel.id, nhayInterval);
-      console.log(`[NHAY] start nhay ${message.channel.name}`);
-    } else if (cmd === "join") {
-      // check if user is in voice channel
-      if (!message.member.voice.channel) return;
-      const connection = joinVoiceChannel({
-        channelId: message.member.voice.channel.id,
-        guildId: message.guild.id,
-        adapterCreator: message.guild.voiceAdapterCreator,
-      });
-      speakingAudio(connection);
-      client.speaking = true;
-      console.log(
-        `[SPEAK] start speaking ${message.member.voice.channel.name} (${message.member.voice.channel.id})`
-      );
-    } else if (cmd === "dung") {
-      // check if user is in voice channel
-      if (!message.member.voice.channel) return;
-      client.player.stop();
-      client.speaking = false;
-      console.log(
-        `[SPEAK] stop speaking ${message.member.voice.channel.name} (${message.member.voice.channel.id})`
-      );
-    } else if (cmd === "leave") {
-      // check if user is in voice channel
-      if (!message.member.voice.channel) return;
-      const connection = getVoiceConnection(message.guild.id);
-      client.player.stop();
-      client.speaking = false;
-      connection.destroy();
-      console.log(
-        `[SPEAK] leave speaking ${message.member.voice.channel.name} (${message.member.voice.channel.id})`
-      );
-    } else if (cmd === "chui") {
-      const target =
-        message.mentions.users.first() ||
-        message.guild.members.cache.get(args[0]);
-      if (!target) return;
-      stopSpam(message.channel.id);
+    // Xử lý các lệnh
+    if (command === a) { // Lệnh spam
+        // Loại bỏ setInterval nếu đã tồn tại
+        client.intervals.has(message.channel.id) && clearInterval(client.intervals.get(message.channel.id));
 
-      // Random message
-      let chuiMessage =
-        chui[random.int(0, chui.length - 1)] + " " + `<@${target.id}>`;
-      message.channel.send(chuiMessage);
-      const chuiInterval = setInterval(async () => {
-        chuiMessage =
-          chui[random.int(0, chui.length - 1)] + " " + `<@${target.id}>`;
-        await message.channel.send(chuiMessage);
-      }, time_delay);
-      client.spam.set(message.channel.id, chuiInterval);
-      console.log(`[CHUI] start chui ${message.channel.name}`);
-   } else if (cmd === "nhayne") {
-      stopSpam(message.channel.id);
-
-      // Random nhay message
-      let nhayneMessage = nhayne[random.int(0, nhayne.length - 1)];
-      message.channel.send(nhayneMessage);
-      const nhayneInterval = setInterval(async () => {
-        nhayneMessage = nhayne[random.int(0, nhayne.length - 1)];
-        await message.channel.send(nhayneMessage);
-      }, time_delay);
-      client.spam.set(message.channel.id, nhayneInterval);
-      console.log(`[N1] start nhay1 ${message.channel.name}`);
-    } else if (cmd === "motchu") {
-      stopSpam(message.channel.id);
-
-      // Random message
-      let motchuMessage = motchu[random.int(0, motchu.length - 1)];
-      message.channel.send(motchuMessage);
-      const motchuInterval = setInterval(async () => {
-        motchuMessage = motchu[random.int(0, motchu.length - 1)];
-        await message.channel.send(motchuMessage);
-      }, time_delay);
-      client.spam.set(message.channel.id, motchuInterval);
-      console.log(`[MOTCHU] start motchu ${message.channel.name}`);
-    } else if (cmd === "reo") {
-      const name = args[0];
-      if (!name) return;
-      stopSpam(message.channel.id);
-
-      // Random message
-      let reoMessage = reo[random.int(0, reo.length - 1)];
-      message.channel.send(reoMessage.replace(/{name}/g, name));
-      const reoInterval = setInterval(async () => {
-        reoMessage = reo[random.int(0, reo.length - 1)];
-        await message.channel.send(reoMessage.replace(/{name}/g, name));
-      }, time_delay);
-      client.spam.set(message.channel.id, reoInterval);
-      console.log(`[CHUI] start chui ${message.channel.name}`);
-    } else if (cmd === "help") {
-      message.channel.send(
-        `## Commands WarBot <:cute:1217285955778777089>\n**<:cute:1217285955778777089> Lệnh : -**\n<:cute:1217285955778777089> **Tạo Bởi : Phan Vu Phương Vi ( P V P V)\n\n**\n- <:cute:1217285955778777089>${PREFIX}spam : spam tin nhắn\n- <:cute:1217285955778777089>
- ${PREFIX}nhay : nhây\n- <:cute:1217285955778777089>
- ${PREFIX}stop : dừng tất cả spam tin nhắn\n- <:cute:1217285955778777089>
- ${PREFIX}join : spam voice\n- <:cute:1217285955778777089>
- ${PREFIX}dung: dừng spam voice\n- <:cute:1217285955778777089>
- ${PREFIX}leave : rời voice\n- <:cute:1217285955778777089>
- ${PREFIX}chui @user : chửi ai đó\n- <:cute:1217285955778777089>
- ${PREFIX}motchu : spam một chữ\n- <:cute:1217285955778777089>
- ${PREFIX}reo (tên) : réo tên ai đó\n- <:cute:1217285955778777089> ${PREFIX}nhayne : nhay 2 chư\n- <:cute:1217285955778777089> ${PREFIX}reset : Restarting all\n- <:cute:1217285955778777089>
- ${PREFIX}help : danh sach lenh\n- <:cute:1217285955778777089>
- ${PREFIX}copy @user : copy tin nhắn người bị user\n- <:cute:1217285955778777089>
- ${PREFIX}ping : ping pong...\n- <:cute:1217285955778777089>
- ${PREFIX}avatar : ping ảnh img\n- <:cute:1217285955778777089>
- ${PREFIX}autores add : add 1ar\n- <:cute:1217285955778777089>
- ${PREFIX}autores remove : remove 1ar\n\n<:cute:1217285955778777089> **__THANK YOU FOR US !__** \ <:cute:1217285955778777089>
-
-***Đang Hoạt Động Cho 
-${client.user.username}***`
-      );
-    } else if (cmd === "reset") {
-      client.spam.forEach((interval) => {
-        clearInterval(interval);
-      });
-      client.spam.clear();
-      client.copy.clear();
-      message.channel.send(`D O N E R E S T A R T I N G . . . . !`);
-      console.log(`[RESET] stop spam all`);
-    } else if (cmd === "ping") {
-      const m = await message.channel.send("Pinging...");
-      // random from 50 to 200
-      const rand = random.int(50, 200);
-      m.edit(`Pong! ${rand}ms`);
-    } else if (cmd === "copy") {
-      const target =
-        message.mentions.users.first() ||
-        message.guild.members.cache.get(args[0]);
-      if (!target) return;
-      stopSpam(message.channel.id);
-      client.copy.set(message.channel.id, target.id);
-    } else if (cmd === "av") {
-      const target =
-        message.mentions.users.first() ||
-        message.guild.members.cache.get(args[0]);
-      if (!target) return;
-      // Check if bot is spamming
-      message.channel.send(target.displayAvatarURL({ dynamic: true }));
-    } else if (cmd === "ar") {
-      const subcmd = args.shift().toLowerCase();
-      if (!subcmd) return;
-      if (subcmd === "add") {
-        const content = args[0];
-        if (!content) return;
-        const res = args.slice(1).join(" ");
-        if (!res) return;
-        client.autores.set(content, res);
-        message.channel.send(`Added **${content}** _${res}_`);
-      } else if (subcmd === "remove") {
-        const content = args[0];
-        if (!content) return;
-        client.autores.delete(content);
-        message.channel.send(`Removed **${content}**`);
-      }
+        // Lặp để gửi tin nhắn spam
+        let spamMessage = spam[Math.floor(Math.random() * spam.length)];
+        message.channel.send(spamMessage);
+        const interval = setInterval(async () => {
+            spamMessage = spam[Math.floor(Math.random() * spam.length)];
+            await message.channel.send(spamMessage);
+        }, thoigianguitinnhan);
+        client.intervals.set(message.channel.id, interval);
+    } else if (command === b) { // Lệnh dừng spam và nhây
+        client.intervals.has(message.channel.id) && clearInterval(client.intervals.get(message.channel.id));
+    } else if (command === c) { // Lệnh nhây
+        let mention = message.author.username;
+        if (message.mentions.members.first()) {
+            mention = message.mentions.members.first().user.id;
+        }
+        const interval = setInterval(async () => {
+            let msg = `${nhay[Math.floor(Math.random() * nhay.length)]}`;
+            await message.channel.send(msg);
+        }, thoigianguitinnhan);
+        client.intervals.set(message.channel.id, interval);
+    } else if (command === d) { // Lệnh join voice và xã
+        if (!args[0]) return message.reply('Vui lòng nhập id kênh, ví dụ: t xa + id channel');
+        const channelId = args[0];
+        const channel = client.channels.cache.get(channelId);
+        if (!channel) return message.channel.send('Không tìm thấy kênh này!');
+        const connection = joinVoiceChannel({
+            channelId: channel.id,
+            guildId: channel.guild.id,
+            adapterCreator: channel.guild.voiceAdapterCreator,
+            selfDeaf: false,
+            selfMute: false
+        });
+        const player = createAudioPlayer({ behaviors: { noSubscriber: NoSubscriberBehavior.Pause } });
+        let resource = createAudioResource('./8.mp3', { inlineVolume: true, inlineBoost: true });
+        resource.volume?.setVolume(0.5);
+        player.play(resource);
+        player.on(AudioPlayerStatus.Idle, () => {
+            resource = createAudioResource('./8.mp3', { inlineVolume: true, inlineBoost: true });
+            resource.volume?.setVolume(0.5);
+            player.play(resource);
+        });
+        connection.subscribe(player);
+    } else if (command === e) { // Lệnh out voice dừng xã
+        const connection = getVoiceConnection(message.guild.id);
+        connection && connection.destroy();
     }
-  } catch (e) {
-    console.log(e);
-  }
 });
 
-function stopSpam(channelId) {
-  if (client.spam.get(channelId)) {
-    clearInterval(client.spam.get(channelId));
-    client.spam.delete(channelId);
-  }
-  if (client.copy.get(channelId)) {
-    client.copy.delete(channelId);
-  }
-}
 
-function speakingAudio(connection) {
-  const player = createAudioPlayer({
-    behaviors: {
-      noSubscriber: NoSubscriberBehavior.Pause,
-    },
-  });
-  const resource = createAudioResource(join(__dirname, "voice.mp3"), {
-    inlineVolume: true,
-    inlineBoost: true,
-  });
-  resource.volume.setVolume(1000000000000000);
-  resouce.boost.setBoost(999999);
-  player.play(resource);
-  connection.subscribe(player);
-  client.player = player;
-  player.on(AudioPlayerStatus.Playing, () => {
-    console.log(`[SPEAK] start speaking [${connection.joinConfig.channelId}]`);
-  });
-  player.on(AudioPlayerStatus.Idle, async () => {
-    console.log(`[SPEAK] stop speaking [${connection.joinConfig.channelId}]`);
-    if (client.speaking) speakingAudio(connection);
-  });
-}
+// Không in ra thông báo của config
+// console.log("Config:", config);
 
-client.login(process.env.TOKEN);
+// Sử dụng token từ config để đăng nhập
+client.login(config.DISCORD_TOKEN);
